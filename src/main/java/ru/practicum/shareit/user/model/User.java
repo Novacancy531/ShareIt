@@ -4,10 +4,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.With;
 
-@Builder
+@Builder(toBuilder = true)
 @Data
 public class User {
-    @With
     private final Long id;
     private String name;
     private String email;

@@ -23,7 +23,7 @@ public class InMemoryUserStorage implements UserStorage {
             throw new ConditionsNotMetException("Такой email уже используется.");
         }
 
-        User newUser = user.withId(getNewId());
+        User newUser = user.toBuilder().id(getNewId()).build();
         userStorage.put(newUser.getId(), newUser);
 
         log.debug("Пользователь {} сохранён в базе данных c id: {}.", newUser.getName(), newUser.getId());
