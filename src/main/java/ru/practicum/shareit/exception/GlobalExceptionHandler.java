@@ -39,7 +39,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ConditionsNotMetException.class)
     public ResponseEntity<ErrorResponse> handleConditionsNotMetException(ConditionsNotMetException exception) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, exception.getMessage());
+        return buildErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
     }
 
     @ExceptionHandler(NotFoundException.class)
