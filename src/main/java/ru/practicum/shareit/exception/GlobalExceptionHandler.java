@@ -33,7 +33,6 @@ public class GlobalExceptionHandler {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> String.format("Поле '%s': %s", error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.joining("; "));
-
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
@@ -59,7 +58,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnhandledExceptions(Exception ex) {
-        log.error("Внутренняя ошибка сервера: ", ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Произошла внутренняя ошибка сервера");
     }
 
@@ -71,7 +69,7 @@ public class GlobalExceptionHandler {
                 message
         );
 
-        log.warn(message);
+        log.error(message);
         return ResponseEntity.status(status).body(error);
     }
 

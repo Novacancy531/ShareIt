@@ -6,16 +6,16 @@ import java.util.Collection;
 
 public interface ItemStorage {
 
-    public Item addItem(Long userId, Item item);
+    Item addItem(Long userId, Item item);
 
-    public Item getItem(Long id);
+    Item getItem(Long id);
 
-    public Collection<Item> getUserItems(Long id);
+    Collection<Item> getUserItems(Long id);
 
-    public Item updateItem(Item item);
+    Item updateItem(Item item);
 
-    public void deleteItem(Long id);
+    void deleteItem(Long id);
 
-    public Collection<Item> searchItems(String query);
+    Collection<Item> searchItems(String query);
 }
 
