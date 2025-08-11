@@ -1,34 +1,25 @@
 package ru.practicum.shareit.booking.dto;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import ru.practicum.shareit.booking.model.Status;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.user.dto.UserDto;
+import lombok.Builder;
+import lombok.Value;
 
 import java.time.LocalDateTime;
 
 @Builder
 @Value
-public class BookingDto {
-    Long id;
+public class BookingCreateDto {
 
-    @FutureOrPresent
     @NotNull(message = "Время начала бронирования не указано.")
+    @FutureOrPresent
     LocalDateTime start;
 
-    @Future
     @NotNull(message = "Время окончания бронирования не указано.")
+    @Future
     LocalDateTime end;
 
     @NotNull(message = "Бронируемая вещь не указана.")
-    ItemDto item;
-
-    UserDto booker;
-
-    @Enumerated(EnumType.STRING)
-    Status status;
+    Long itemId;
 }

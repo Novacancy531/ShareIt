@@ -8,6 +8,7 @@ import ru.practicum.shareit.item.dto.ItemPatchDto;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserRepository;
 
 import java.util.Collection;
@@ -22,11 +23,11 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
-
-        userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь не найден."));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден."));
 
         Item item = ItemMapper.mapToItem(itemDto);
-        item.setOwner(userId);
+        item.setOwner(user);
 
         return ItemMapper.mapToItemDto(itemRepository.save(item));
     }
@@ -39,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemDto> getUserItems(Long id) {
-        return itemRepository.findByOwner(id).stream()
+        return itemRepository.findByOwnerId(id).stream()
                 .map(ItemMapper::mapToItemDto)
                 .toList();
     }
@@ -49,7 +50,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId).orElseThrow(()
                 -> new NotFoundException("Предмет для обновления не найден."));
 
-        if (!Objects.equals(userId, item.getOwner())) {
+        if (!Objects.equals(userId, item.getOwner().getId())) {
             throw new NotFoundException("Не найден предмет для редактирования.");
         }
 

@@ -1,10 +1,9 @@
 package ru.practicum.shareit.booking.service;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -12,32 +11,31 @@ import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.item.storage.ItemRepository;
+import ru.practicum.shareit.user.storage.UserRepository;
 
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final UserRepository userRepository;
+    private final ItemRepository itemRepository;
 
     @Transactional
     @Override
-    public BookingDto createBooking(long userId, BookingDto bookingDto) {
-        User booker = entityManager.find(User.class, userId);
-        if (booker == null) {
-            throw new NotFoundException("Пользователь не найден");
+    public BookingDto createBooking(long userId, BookingCreateDto bookingCreateDto) {
+        var booker = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+
+        var item = itemRepository.findById(bookingCreateDto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Предмет не найден"));
+
+        if(!item.getAvailable()) {
+            throw new AccessDeniedException("Предмет недоступен.");
         }
 
-        Item item = entityManager.find(Item.class, bookingDto.getItemId());
-        if (item == null) {
-            throw new NotFoundException("Предмет не найден");
-        }
-
-        Booking booking = BookingMapper.mapToBooking(bookingDto, booker, item);
+        Booking booking = BookingMapper.mapToBooking(bookingCreateDto, booker, item);
         booking.setStatus(Status.WAITING);
 
         return BookingMapper.mapToBookingDto(bookingRepository.save(booking));

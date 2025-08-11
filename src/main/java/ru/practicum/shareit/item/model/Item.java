@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ru.practicum.shareit.user.model.User;
 
 @Getter
 @Setter
@@ -25,8 +26,10 @@ public class Item {
     @Column(name = "available")
     private Boolean available;
 
-    @Column(name = "owner_id")
-    private Long owner;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    @ToString.Exclude
+    private User owner;
 
     @Column(name = "item_request")
     private Long itemRequest;
