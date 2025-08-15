@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.dto;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import ru.practicum.shareit.booking.model.Status;
@@ -16,7 +15,6 @@ import java.time.LocalDateTime;
 public class BookingDto {
     Long id;
 
-    @FutureOrPresent
     @NotNull(message = "Время начала бронирования не указано.")
     LocalDateTime start;
 

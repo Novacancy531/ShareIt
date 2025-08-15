@@ -5,9 +5,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long> {
@@ -19,4 +19,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> searchAvailableItems(@Param("text") String text);
 
     List<Item> findByOwnerId(Long ownerId);
+
+    @Query("SELECT i FROM Item i LEFT JOIN FETCH i.comments c LEFT JOIN FETCH c.author WHERE i.id = :id")
+    Optional<Item> findByIdWithCommentsAndAuthors(Long id);
 }

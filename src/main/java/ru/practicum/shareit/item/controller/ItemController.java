@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item.controller;
 
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemPatchDto;
 import ru.practicum.shareit.item.service.ItemService;
@@ -54,5 +55,12 @@ public class ItemController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteItem(Long id) {
         itemService.deleteItem(id);
+    }
+
+    @PostMapping("{itemId}/comment")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommentDto createComment(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId,
+                                    @RequestBody CommentDto commentDto) {
+        return itemService.createComment(userId, itemId, commentDto);
     }
 }

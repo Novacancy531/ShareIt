@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
+import java.util.List;
+
 @Getter
 @Setter
 @ToString
@@ -33,4 +35,7 @@ public class Item {
 
     @Column(name = "item_request")
     private Long itemRequest;
+
+    @OneToMany(mappedBy = "item", fetch =  FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<Comment> comments;
 }

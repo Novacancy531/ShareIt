@@ -6,7 +6,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Value;
 
-@Builder
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Builder(toBuilder = true)
 @Value
 public class ItemDto {
     Long id;
@@ -20,4 +23,7 @@ public class ItemDto {
     Boolean available;
     Long owner;
     Long itemRequest;
+    LocalDateTime lastBooking;
+    LocalDateTime nextBooking;
+    List<CommentDto> comments;
 }

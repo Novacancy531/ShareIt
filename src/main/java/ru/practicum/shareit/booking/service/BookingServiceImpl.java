@@ -12,26 +12,29 @@ import ru.practicum.shareit.booking.storage.BookingRepository;
 import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.storage.ItemRepository;
-import ru.practicum.shareit.user.storage.UserRepository;
+import ru.practicum.shareit.user.dto.mapper.UserMapper;
+import ru.practicum.shareit.user.service.UserServiceImpl;
+
+import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
+    private final UserServiceImpl userService;
     private final ItemRepository itemRepository;
 
     @Transactional
     @Override
     public BookingDto createBooking(long userId, BookingCreateDto bookingCreateDto) {
-        var booker = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        var booker = UserMapper.mapToUser(userService.getUser(userId));
 
         var item = itemRepository.findById(bookingCreateDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Предмет не найден"));
 
-        if(!item.getAvailable()) {
+        if (!item.getAvailable()) {
             throw new AccessDeniedException("Предмет недоступен.");
         }
 
@@ -59,11 +62,11 @@ public class BookingServiceImpl implements BookingService {
     @Transactional
     @Override
     public BookingDto getBooking(long userId, long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
+        var booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование не найдено"));
 
-        boolean isOwner = userId == booking.getItem().getOwner().getId();
-        boolean isBooker = userId == booking.getBooker().getId();
+        var isOwner = userId == booking.getItem().getOwner().getId();
+        var isBooker = userId == booking.getBooker().getId();
 
         if (!isOwner && !isBooker) {
             throw new AccessDeniedException("Нет доступа к просмотру бронирования");
@@ -71,4 +74,35 @@ public class BookingServiceImpl implements BookingService {
 
         return BookingMapper.mapToBookingDto(booking);
     }
+
+    @Override
+    public List<BookingDto> getBookings(Long userId, String state) {
+        userService.getUser(userId);
+
+        return bookingRepository.findBookingsByUserAndState(userId, false, state)
+                .stream()
+                .map(BookingMapper::mapToBookingDto)
+                .toList();
+    }
+
+    @Override
+    public List<BookingDto> getBookingsForOwner(Long userId, String state) {
+        userService.getUser(userId);
+
+        return bookingRepository.findBookingsByUserAndState(userId, true, state)
+                .stream()
+                .map(BookingMapper::mapToBookingDto)
+                .toList();
+    }
+
+    @Override
+    public List<Booking> findAllByItemIdIn(Collection<Long> itemIds) {
+        return bookingRepository.findAllByItemIdIn(itemIds);
+    }
+
+    @Override
+    public Booking findByBookerIdAndItemId(Long userId, Long itemId) {
+        return bookingRepository.findByBookerIdAndItemId(userId, itemId);
+    }
+
 }

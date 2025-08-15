@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.user.model.User;
 
+import java.util.stream.Collectors;
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class ItemMapper {
 
@@ -29,6 +31,11 @@ public final class ItemMapper {
                 .description(item.getDescription())
                 .available(item.getAvailable())
                 .owner(item.getOwner() != null ? item.getOwner().getId() : null)
+                .comments(item.getComments() != null
+                ? item.getComments().stream()
+                .map(CommentMapper::mapToCommentDto)
+                .collect(Collectors.toList())
+                : null)
                 .itemRequest(item.getItemRequest())
                 .build();
     }
