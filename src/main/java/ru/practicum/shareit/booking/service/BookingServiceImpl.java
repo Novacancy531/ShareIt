@@ -13,7 +13,7 @@ import ru.practicum.shareit.exception.AccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.storage.ItemRepository;
 import ru.practicum.shareit.user.dto.mapper.UserMapper;
-import ru.practicum.shareit.user.service.UserServiceImpl;
+import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
-    private final UserServiceImpl userService;
+    private final UserService userService;
     private final ItemRepository itemRepository;
 
     @Transactional
@@ -31,7 +31,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto createBooking(long userId, BookingCreateDto bookingCreateDto) {
         var booker = UserMapper.mapToUser(userService.getUser(userId));
 
-        var item = itemRepository.findById(bookingCreateDto.getItemId())
+        var item = itemRepository.findById(bookingCreateDto.itemId())
                 .orElseThrow(() -> new NotFoundException("Предмет не найден"));
 
         if (!item.getAvailable()) {
