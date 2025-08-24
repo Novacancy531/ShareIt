@@ -33,9 +33,9 @@ public class Item {
     @ToString.Exclude
     private User owner;
 
-    @Column(name = "item_request")
-    private Long itemRequest;
+    @Column(name ="request_id")
+    private Long requestId;
 
-    @OneToMany(mappedBy = "item", fetch =  FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "item", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     private List<Comment> comments;
 }

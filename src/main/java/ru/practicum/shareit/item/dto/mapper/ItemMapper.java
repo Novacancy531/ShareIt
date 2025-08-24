@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.dto.mapper;
 
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.model.Item;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,7 @@ public final class ItemMapper {
                 .description(itemDto.getDescription())
                 .available(itemDto.getAvailable())
                 .owner(owner)
-                .itemRequest(itemDto.getItemRequest())
+                .requestId(itemDto.getRequestId())
                 .build();
     }
 
@@ -36,8 +37,15 @@ public final class ItemMapper {
                 .map(CommentMapper::mapToCommentDto)
                 .collect(Collectors.toList())
                 : null)
-                .itemRequest(item.getItemRequest())
+                .requestId(item.getRequestId())
                 .build();
     }
 
+    public static ItemRequestDto mapToItemRequestDto(Item item) {
+        return ItemRequestDto.builder()
+                .itemId(item.getId())
+                .name(item.getName())
+                .ownerId(item.getOwner().getId())
+                .build();
+    }
 }

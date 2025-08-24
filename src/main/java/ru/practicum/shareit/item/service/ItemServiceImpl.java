@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final CommentRepository commentRepository;
@@ -35,6 +37,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto addItem(Long userId, ItemDto itemDto) {
+        log.info(itemDto.toString());
         User user = UserMapper.mapToUser(userService.getUser(userId));
 
         Item item = ItemMapper.mapToItem(itemDto);
@@ -140,5 +143,11 @@ public class ItemServiceImpl implements ItemService {
                 .build();
 
         return CommentMapper.mapToCommentDto(commentRepository.save(comment));
+    }
+
+    @Override
+    public List<Item> getItemsByRequestId(Long requestId) {
+        return itemRepository.findItemsByRequestId(requestId).stream()
+                .toList();
     }
 }

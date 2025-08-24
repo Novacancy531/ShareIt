@@ -20,4 +20,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("SELECT i FROM Item i LEFT JOIN FETCH i.comments c LEFT JOIN FETCH c.author WHERE i.id = :id")
     Optional<Item> findByIdWithCommentsAndAuthors(Long id);
+
+    @Query("SELECT i FROM Item i WHERE i.requestId = :requestId")
+    List<Item> findItemsByRequestId(Long requestId);
 }
