@@ -38,23 +38,28 @@ class RequestServiceTest {
     @InjectMocks
     private RequestServiceImpl requestService;
 
+    private User testUser;
+    private UserDto testUserDto;
+    private Request testRequest;
+    private RequestDto testRequestDto;
+
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        testUser = new User(1L, "Aleksandr", "Dolsa.broadstaff@gmail.com");
+        testUserDto = UserMapper.mapToUserDto(testUser);
+        testRequestDto = new RequestDto(null, "Описание", testUser.getId(), Timestamp.from(Instant.MIN));
+        testRequest = new Request(1L, "Описание", testUser, null);
     }
 
     @Test
     void createRequest() {
-        Long userId = 1L;
-        RequestDto requestDto = new RequestDto(null, "Описание", 1L, Timestamp.from(Instant.MIN));
-        User user = new User(userId, "Aleksandr", "Dolsa.broadstaff@gmail.com");
-        UserDto userDto = UserMapper.mapToUserDto(user);
-        Request savedRequest = new Request(1L, "Описание", user, null);
+        when(userService.getUser(testUser.getId())).thenReturn(testUserDto);
+        when(requestRepository.save(any(Request.class))).thenReturn(testRequest);
 
-        when(userService.getUser(userId)).thenReturn(userDto);
-        when(requestRepository.save(any(Request.class))).thenReturn(savedRequest);
-
-        RequestDto result = requestService.createRequest(userId, requestDto);
+        RequestDto result = requestService.createRequest(testUser.getId(), testRequestDto);
 
         assertThat(result.id()).isEqualTo(1L);
         assertThat(result.description()).isEqualTo("Описание");
@@ -63,14 +68,10 @@ class RequestServiceTest {
 
     @Test
     void getRequests() {
-        Long userId = 1L;
-        User user = new User(userId, "Aleksandr", "Dolsa.broadstaff@gmail.com");
-        Request request = new Request(1L, "Описание", user, null);
+        when(requestRepository.findRequestsByUserId(testUser.getId())).thenReturn(List.of(testRequest));
+        when(itemService.getItemsByRequestId(testRequest.getId())).thenReturn(List.of());
 
-        when(requestRepository.findRequestsByUserId(userId)).thenReturn(List.of(request));
-        when(itemService.getItemsByRequestId(request.getId())).thenReturn(List.of());
-
-        List<RequestWithItems> requests = requestService.getRequests(userId);
+        List<RequestWithItems> requests = requestService.getRequests(testUser.getId());
 
         assertThat(requests).hasSize(1);
         assertThat(requests.get(0).id()).isEqualTo(1L);
@@ -79,9 +80,7 @@ class RequestServiceTest {
 
     @Test
     void getAllRequests() {
-        User user = new User(1L, "Aleksandr", "Dolsa.broadstaff@gmail.com");
-        Request request = new Request(1L, "Описание", user, null);
-        when(requestRepository.findAll()).thenReturn(List.of(request));
+        when(requestRepository.findAll()).thenReturn(List.of(testRequest));
 
         List<RequestDto> requests = requestService.getAllRequests();
 
@@ -90,25 +89,20 @@ class RequestServiceTest {
     }
 
     @Test
-    void getRequestByIdFound() {
-        Long requestId = 1L;
-        User user = new User(1L, "Aleksandr", "Dolsa.broadstaff@gmail.com");
-        Request request = new Request(requestId, "Описание", user, null);
+    void getRequestById() {
+        when(requestRepository.findById(testRequest.getId())).thenReturn(Optional.of(testRequest));
+        when(itemService.getItemsByRequestId(testRequest.getId())).thenReturn(List.of());
 
-        when(requestRepository.findById(requestId)).thenReturn(Optional.of(request));
-        when(itemService.getItemsByRequestId(requestId)).thenReturn(List.of());
+        RequestWithItems result = requestService.getRequestById(testRequest.getId());
 
-        RequestWithItems result = requestService.getRequestById(requestId);
-
-        assertThat(result.id()).isEqualTo(requestId);
+        assertThat(result.id()).isEqualTo(testRequest.getId());
         assertThat(result.items()).isEmpty();
     }
 
     @Test
     void getRequestByIdNotFound() {
-        Long requestId = 1L;
-        when(requestRepository.findById(requestId)).thenReturn(Optional.empty());
+        when(requestRepository.findById(testRequest.getId())).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> requestService.getRequestById(requestId));
+        assertThrows(RuntimeException.class, () -> requestService.getRequestById(testRequest.getId()));
     }
 }

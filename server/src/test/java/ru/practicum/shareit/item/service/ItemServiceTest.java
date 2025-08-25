@@ -6,6 +6,8 @@ import org.mockito.*;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.exception.AccessDeniedException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemPatchDto;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ItemServiceTest {
@@ -46,8 +49,10 @@ class ItemServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        user = new User(1L, "Aleksandr", "Dolsa.broadstaff@gmail.com");
+
+        user = new User(1L, "Александр", "Dolsa.broadstaff@gmail.com");
         userDto = UserMapper.mapToUserDto(user);
+
         item = Item.builder()
                 .id(1L)
                 .name("Дрель")
@@ -55,6 +60,7 @@ class ItemServiceTest {
                 .available(true)
                 .owner(user)
                 .build();
+
         itemDto = ItemDto.builder()
                 .id(null)
                 .name("Дрель")
@@ -74,7 +80,7 @@ class ItemServiceTest {
 
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getName()).isEqualTo("Дрель");
-        verify(itemRepository).save(any());
+        verify(itemRepository, times(1)).save(any());
     }
 
     @Test
@@ -84,6 +90,13 @@ class ItemServiceTest {
         ItemDto result = itemService.getItem(1L);
 
         assertThat(result.getName()).isEqualTo("Дрель");
+    }
+
+    @Test
+    void getItemNotFound() {
+        when(itemRepository.findByIdWithCommentsAndAuthors(1L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> itemService.getItem(1L));
     }
 
     @Test
@@ -97,6 +110,25 @@ class ItemServiceTest {
         assertThat(updated.getDescription()).isEqualTo("Норм дрель");
         assertThat(updated.getAvailable()).isTrue();
         verify(itemRepository).save(any());
+    }
+
+    @Test
+    void updateItemNotFound() {
+        when(itemRepository.findById(1L)).thenReturn(Optional.empty());
+        ItemPatchDto patch = new ItemPatchDto(1L, "Молоток", null, null);
+
+        assertThrows(NotFoundException.class, () -> itemService.updateItem(1L, 1L, patch));
+    }
+
+    @Test
+    void updateItemNotOwner() {
+        User other = new User(2L, "Bob", "bob@example.com");
+        item.setOwner(other);
+        when(itemRepository.findById(1L)).thenReturn(Optional.of(item));
+
+        ItemPatchDto patch = new ItemPatchDto(1L, "Молоток", null, null);
+
+        assertThrows(NotFoundException.class, () -> itemService.updateItem(1L, 1L, patch));
     }
 
     @Test
@@ -115,11 +147,30 @@ class ItemServiceTest {
     }
 
     @Test
+    void searchItemsNull() {
+        var r1 = itemService.searchItems(null);
+        var r2 = itemService.searchItems("   ");
+        assertThat(r1).isEmpty();
+        assertThat(r2).isEmpty();
+    }
+
+    @Test
+    void getItemsByRequestId() {
+        when(itemRepository.findItemsByRequestId(1L)).thenReturn(List.of(item));
+
+        var result = itemService.getItemsByRequestId(1L);
+
+        assertThat(result).hasSize(1);
+    }
+
+    @Test
     void createComment() {
         Booking booking = Booking.builder()
                 .status(Status.APPROVED)
-                .start(LocalDateTime.now().minusDays(2))
+                .start(LocalDateTime.now().minusDays(3))
                 .end(LocalDateTime.now().minusDays(1))
+                .item(item)
+                .booker(user)
                 .build();
 
         when(bookingService.findByBookerIdAndItemId(1L, 1L)).thenReturn(booking);
@@ -131,14 +182,113 @@ class ItemServiceTest {
         CommentDto result = itemService.createComment(1L, 1L, new CommentDto(null, "Норм", null, null));
 
         assertThat(result.id()).isEqualTo(1L);
+        verify(commentRepository).save(any());
     }
 
     @Test
-    void getItemsByRequestId_ShouldReturnItems() {
-        when(itemRepository.findItemsByRequestId(1L)).thenReturn(List.of(item));
+    void createCommentNotApproved() {
+        Booking booking = Booking.builder()
+                .status(Status.REJECTED)
+                .start(LocalDateTime.now().minusDays(3))
+                .end(LocalDateTime.now().minusDays(1))
+                .item(item)
+                .booker(user)
+                .build();
 
-        var result = itemService.getItemsByRequestId(1L);
+        when(bookingService.findByBookerIdAndItemId(1L, 1L)).thenReturn(booking);
 
-        assertThat(result).hasSize(1);
+        assertThrows(AccessDeniedException.class,
+                () -> itemService.createComment(1L, 1L, new CommentDto(null, "text", null, null)));
+    }
+
+    @Test
+    void createCommentNotFinished() {
+        Booking booking = Booking.builder()
+                .status(Status.APPROVED)
+                .start(LocalDateTime.now().minusDays(1))
+                .end(LocalDateTime.now().plusDays(1))
+                .item(item)
+                .booker(user)
+                .build();
+
+        when(bookingService.findByBookerIdAndItemId(1L, 1L)).thenReturn(booking);
+
+        assertThrows(AccessDeniedException.class,
+                () -> itemService.createComment(1L, 1L, new CommentDto(null, "text", null, null)));
+    }
+
+    @Test
+    void createCommentItemNotFound() {
+        Booking booking = Booking.builder()
+                .status(Status.APPROVED)
+                .start(LocalDateTime.now().minusDays(3))
+                .end(LocalDateTime.now().minusDays(1))
+                .item(item)
+                .booker(user)
+                .build();
+
+        when(bookingService.findByBookerIdAndItemId(1L, 1L)).thenReturn(booking);
+        when(userService.getUser(1L)).thenReturn(userDto);
+        when(itemRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> itemService.createComment(1L, 1L, new CommentDto(null, "text",
+                        null, null)));
+    }
+
+    @Test
+    void getUserItems() {
+        Item item2 = Item.builder()
+                .id(2L)
+                .name("Пила")
+                .description("Хорошая")
+                .available(true)
+                .owner(user)
+                .build();
+
+        when(itemRepository.findByOwnerId(1L)).thenReturn(List.of(item, item2));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Booking past = Booking.builder()
+                .id(10L)
+                .item(item)
+                .start(now.minusDays(5))
+                .end(now.minusDays(2))
+                .status(Status.APPROVED)
+                .build();
+
+        Booking future = Booking.builder()
+                .id(11L)
+                .item(item)
+                .start(now.plusDays(2))
+                .end(now.plusDays(3))
+                .status(Status.APPROVED)
+                .build();
+
+        Booking otherFuture = Booking.builder()
+                .id(12L)
+                .item(item2)
+                .start(now.plusDays(5))
+                .end(now.plusDays(6))
+                .status(Status.APPROVED)
+                .build();
+
+        when(bookingService.findAllByItemIdIn(List.of(1L, 2L))).thenReturn(List.of(past, future, otherFuture));
+
+        var result = itemService.getUserItems(1L);
+
+        Optional<ItemDto> dto1 = result.stream().filter(d -> d.getId() == 1L).findFirst();
+        Optional<ItemDto> dto2 = result.stream().filter(d -> d.getId() == 2L).findFirst();
+
+        assertThat(dto1).isPresent();
+        assertThat(dto1.get().getLastBooking()).isNotNull();
+        assertThat(dto1.get().getNextBooking()).isNotNull();
+        assertThat(dto1.get().getLastBooking()).isEqualTo(past.getEnd());
+        assertThat(dto1.get().getNextBooking()).isEqualTo(future.getStart());
+
+        assertThat(dto2).isPresent();
+        assertThat(dto2.get().getLastBooking()).isNull();
+        assertThat(dto2.get().getNextBooking()).isEqualTo(otherFuture.getStart());
     }
 }
