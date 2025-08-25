@@ -24,11 +24,6 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
     }
 
-    @ExceptionHandler(ConditionsNotMetException.class)
-    public ResponseEntity<ErrorResponse> handleConditionsNotMetException(ConditionsNotMetException exception) {
-        return buildErrorResponse(HttpStatus.CONFLICT, exception.getMessage());
-    }
-
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -40,7 +35,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnhandledExceptions() {
+    public ResponseEntity<ErrorResponse> handleUnhandledExceptions(Exception ex) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Произошла внутренняя ошибка сервера");
     }
 
