@@ -8,7 +8,7 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.request.dto.RequestDto;
 import ru.practicum.shareit.request.dto.RequestWithItems;
-import ru.practicum.shareit.request.mapper.RequestMaper;
+import ru.practicum.shareit.request.mapper.RequestMapper;
 import ru.practicum.shareit.request.model.Request;
 import ru.practicum.shareit.request.storage.RequestRepository;
 import ru.practicum.shareit.user.mapper.UserMapper;
@@ -25,37 +25,38 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public RequestDto createRequest(Long userId, RequestDto requestDto) {
-        Request request = RequestMaper.mapToItemRequest(requestDto);
+        Request request = RequestMapper.mapToItemRequest(requestDto);
         request.setRequestor(UserMapper.mapToUser(userService.getUser(userId)));
 
-        return RequestMaper.mapToItemRequestDto(requestRepository.save(request));
+        return RequestMapper.mapToItemRequestDto(requestRepository.save(request));
     }
 
     @Override
     public List<RequestWithItems> getRequests(Long userId) {
-        return requestRepository.findRequestsByUserId(userId).stream()
+        return requestRepository.findByRequestorIdOrderByCreatedDesc(userId).stream()
                 .map(request -> {
                     List<ItemRequestDto> items = itemService.getItemsByRequestId(request.getId()).stream()
                             .map(ItemMapper::mapToItemRequestDto)
                             .toList();
-                    return RequestMaper.mapToItemRequestWithItems(request, items);
+                    return RequestMapper.mapToItemRequestWithItems(request, items);
                 })
                 .toList();
     }
 
     @Override
     public List<RequestDto> getAllRequests() {
-        return requestRepository.findAll().stream()
-                .map(RequestMaper::mapToItemRequestDto)
+        return requestRepository.findAllByOrderByCreatedDesc().stream()
+                .map(RequestMapper::mapToItemRequestDto)
                 .toList();
     }
+
 
     @Override
     public RequestWithItems getRequestById(Long requestId) {
         var items = itemService.getItemsByRequestId(requestId).stream()
                 .map(ItemMapper::mapToItemRequestDto)
                 .toList();
-        return RequestMaper.mapToItemRequestWithItems(requestRepository.findById(requestId)
+        return RequestMapper.mapToItemRequestWithItems(requestRepository.findById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос отсутствует")), items);
     }
 }

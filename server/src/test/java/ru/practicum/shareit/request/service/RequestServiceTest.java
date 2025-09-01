@@ -68,7 +68,8 @@ class RequestServiceTest {
 
     @Test
     void getRequests() {
-        when(requestRepository.findRequestsByUserId(testUser.getId())).thenReturn(List.of(testRequest));
+        when(requestRepository.findByRequestorIdOrderByCreatedDesc(testUser.getId()))
+                .thenReturn(List.of(testRequest));
         when(itemService.getItemsByRequestId(testRequest.getId())).thenReturn(List.of());
 
         List<RequestWithItems> requests = requestService.getRequests(testUser.getId());
@@ -78,15 +79,18 @@ class RequestServiceTest {
         assertThat(requests.get(0).items()).isEmpty();
     }
 
+
     @Test
     void getAllRequests() {
-        when(requestRepository.findAll()).thenReturn(List.of(testRequest));
+        when(requestRepository.findAllByOrderByCreatedDesc())
+                .thenReturn(List.of(testRequest));
 
         List<RequestDto> requests = requestService.getAllRequests();
 
         assertThat(requests).hasSize(1);
         assertThat(requests.get(0).id()).isEqualTo(1L);
     }
+
 
     @Test
     void getRequestById() {

@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class RequestMaper {
+public final class RequestMapper {
 
 
     public static Request mapToItemRequest(final RequestDto requestDto) {
