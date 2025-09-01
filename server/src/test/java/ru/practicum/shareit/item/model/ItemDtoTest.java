@@ -54,26 +54,25 @@ class ItemDtoTest {
 
     @Test
     void testDeserialize() throws Exception {
-        String content = """
-                {
-                  "id": 10,
-                  "name": "Дрель",
-                  "description": "Супер дрель",
-                  "available": true,
-                  "owner": 100,
-                  "requestId": 200,
-                  "lastBooking": "2025-01-01T10:00:00",
-                  "nextBooking": "2025-01-05T10:00:00",
-                  "comments": [
-                    {
-                      "id": 1,
-                      "text": "отзыв",
-                      "authorName": "Александр",
-                      "created": "2025-01-01T12:00:00"
-                    }
-                  ]
-                }
-                """;
+        String content = "{\n" +
+                "  \"id\": 10,\n" +
+                "  \"name\": \"Дрель\",\n" +
+                "  \"description\": \"Супер дрель\",\n" +
+                "  \"available\": true,\n" +
+                "  \"owner\": 100,\n" +
+                "  \"requestId\": 200,\n" +
+                "  \"lastBooking\": \"2025-01-01T10:00:00\",\n" +
+                "  \"nextBooking\": \"2025-01-05T10:00:00\",\n" +
+                "  \"comments\": [\n" +
+                "    {\n" +
+                "      \"id\": 1,\n" +
+                "      \"text\": \"отзыв\",\n" +
+                "      \"authorName\": \"Александр\",\n" +
+                "      \"created\": \"2025-01-01T12:00:00\"\n" +
+                "    }\n" +
+                "  ]\n" +
+                "}";
+
 
         ItemDto parsed = json.parseObject(content);
 

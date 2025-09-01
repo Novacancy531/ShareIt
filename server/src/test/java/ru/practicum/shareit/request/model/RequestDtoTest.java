@@ -36,14 +36,13 @@ class RequestDtoTest {
 
     @Test
     void testDeserialize() throws Exception {
-        String content = """
-                {
-                  "id": 1,
-                  "description": "Нужен холодильник",
-                  "requestor": 100,
-                  "created": "2025-01-01T12:00:00"
-                }
-                """;
+        String content = "{\n" +
+                "  \"id\": 1,\n" +
+                "  \"description\": \"Нужен холодильник\",\n" +
+                "  \"requestor\": 100,\n" +
+                "  \"created\": \"2025-01-01T12:00:00\"\n" +
+                "}";
+
 
         RequestDto parsed = json.parseObject(content);
 
