@@ -1,0 +1,43 @@
+package ru.practicum.shareit.request.controller;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.request.dto.RequestDto;
+import ru.practicum.shareit.request.dto.RequestWithItems;
+import ru.practicum.shareit.request.service.RequestService;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/requests")
+@RequiredArgsConstructor
+public class RequestController {
+
+    private final RequestService requestService;
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    RequestDto createRequest(@RequestHeader(name = "X-Sharer-User-Id") Long userId,
+                             @RequestBody RequestDto requestDto) {
+        return requestService.createRequest(userId, requestDto);
+    }
+
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    List<RequestWithItems> getRequests(@RequestHeader(name = "X-Sharer-User-Id") Long userId) {
+        return requestService.getRequests(userId);
+    }
+
+    @GetMapping("/all")
+    @ResponseStatus(HttpStatus.OK)
+    List<RequestDto> getAllRequests() {
+        return requestService.getAllRequests();
+    }
+
+    @GetMapping("{requestId}")
+    @ResponseStatus(HttpStatus.OK)
+    RequestWithItems getRequest(@PathVariable("requestId") Long requestId) {
+        return requestService.getRequestById(requestId);
+    }
+}
